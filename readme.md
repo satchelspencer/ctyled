@@ -96,7 +96,7 @@ its maybe changing look at /classes/core for an example
 to make colors in ctyled useful we need a way of defining a color scheme, then a way of defining specific colors _relative to each other_ within that scheme. A color scheme is defined as a gradient with a series of stops from the foreground to the background of that color.
 
 ```typescript
-import Color from 'lib/ctyled/color'
+import Color from 'ctyled/color'
 
 const grayScale = new Color(['white', 'black']),
   red = new Color(['red', 'white'])
