@@ -11,6 +11,7 @@ import {
   cssToInline,
   round,
 } from './util'
+import Color from './color'
 
 import core, { CoreProps } from './classes/core'
 import active from './classes/active'
@@ -78,18 +79,15 @@ const constructor: Types.Constructor = <P, T>(
       [theme, styles, attrProps]
     )
 
-    const { computedThemeProps, lastChildTheme } = useMemo(
-      () => {
-        const computedProps = _.mapValues(classDef.props, (propConfig, propName) =>
-          getValue(propName)
-        )
-        return {
-          computedThemeProps: computedProps,
-          lastChildTheme: { ...theme, ...computedProps },
-        }
-      },
-      [styles, theme, attrProps]
-    )
+    const { computedThemeProps, lastChildTheme } = useMemo(() => {
+      const computedProps = _.mapValues(classDef.props, (propConfig, propName) =>
+        getValue(propName)
+      )
+      return {
+        computedThemeProps: computedProps,
+        lastChildTheme: { ...theme, ...computedProps },
+      }
+    }, [styles, theme, attrProps])
 
     /* refProps computation */
     const refProps: { ref?: any; inRef?: any } = {}
@@ -99,80 +97,64 @@ const constructor: Types.Constructor = <P, T>(
     }
 
     /* stylesheet computation */
-    const stylesClassName = useMemo(
-      () => {
-        const [sheetCss, sheetInterpolations] = joinTemplates(
-            classDef.styles,
-            sheetStyle
-          ),
-          sheetInterpValues = sheetInterpolations.map(interp => {
-            if (typeof interp === 'function') return interp(computedThemeProps as T, attrProps)
-            else return interp
-          }),
-          sheetString = interpolateTemplate([sheetCss, sheetInterpValues])
-        return css([sheetString, []])
-      },
-      [computedThemeProps, attrProps]
-    )
+    const stylesClassName = useMemo(() => {
+      const [sheetCss, sheetInterpolations] = joinTemplates(classDef.styles, sheetStyle),
+        sheetInterpValues = sheetInterpolations.map(interp => {
+          if (typeof interp === 'function')
+            return interp(computedThemeProps as T, attrProps)
+          else return interp
+        }),
+        sheetString = interpolateTemplate([sheetCss, sheetInterpValues])
+      return css([sheetString, []])
+    }, [computedThemeProps, attrProps])
 
     /* inline style computation */
-    const inline = useMemo(
-      () => {
-        const classInlineStyles = _.mapValues(classDef.inline, value => {
-            if (_.isFunction(value)) return value(computedThemeProps as T)
-            else return value
-          }),
-          [inlineCss, interpolations] = inlineStyle,
-          interpValues = interpolations.map(interp => {
-            if (_.isFunction(interp)) return interp(computedThemeProps, attrProps)
-            else return interp
-          }),
-          extendedInlineStyles = cssToInline(
-            interpolateTemplate([inlineCss, interpValues])
-          )
+    const inline = useMemo(() => {
+      const classInlineStyles = _.mapValues(classDef.inline, value => {
+          if (_.isFunction(value)) return value(computedThemeProps as T)
+          else return value
+        }),
+        [inlineCss, interpolations] = inlineStyle,
+        interpValues = interpolations.map(interp => {
+          if (_.isFunction(interp)) return interp(computedThemeProps, attrProps)
+          else return interp
+        }),
+        extendedInlineStyles = cssToInline(interpolateTemplate([inlineCss, interpValues]))
 
-        return _.pickBy(
-          {
-            ...classInlineStyles,
-            ...extendedInlineStyles,
-            ...((style as object) || {}),
-          },
-          (val, prop) => !inheritedProps.includes(prop) || pstyle[prop] !== val
-        )
-      },
-      [computedThemeProps, attrProps]
-    )
+      return _.pickBy(
+        {
+          ...classInlineStyles,
+          ...extendedInlineStyles,
+          ...((style as object) || {}),
+        },
+        (val, prop) => !inheritedProps.includes(prop) || pstyle[prop] !== val
+      )
+    }, [computedThemeProps, attrProps])
 
-    const childContextValue = useMemo(
-      () => {
-        return {
-          theme: lastChildTheme,
-          pstyle: {
-            ...pstyle,
-            ..._.pick(inline, inheritedProps),
-          },
-        }
-      },
-      [lastChildTheme, inline, pstyle]
-    )
+    const childContextValue = useMemo(() => {
+      return {
+        theme: lastChildTheme,
+        pstyle: {
+          ...pstyle,
+          ..._.pick(inline, inheritedProps),
+        },
+      }
+    }, [lastChildTheme, inline, pstyle])
 
     const passThoughProps = useMemo(() => _.omit(childProps, ...attrsProps), [
       ...Object.values(childProps),
     ])
 
-    const child = useMemo(
-      () => {
-        return (
-          <Element
-            className={stylesClassName + ' ' + (className || '')}
-            style={inline}
-            {...passThoughProps}
-            {...refProps}
-          />
-        )
-      },
-      [passThoughProps, stylesClassName, className, inline, refProps]
-    )
+    const child = useMemo(() => {
+      return (
+        <Element
+          className={stylesClassName + ' ' + (className || '')}
+          style={inline}
+          {...passThoughProps}
+          {...refProps}
+        />
+      )
+    }, [passThoughProps, stylesClassName, className, inline, refProps])
 
     return _.isEqual(childContextValue, context) ? (
       child
@@ -243,5 +225,5 @@ domels.forEach(el => {
   coreConstructor[el].displayName = el
 })
 
-export { core, inline, active, ThemeProvider, round }
+export { core, inline, active, ThemeProvider, round, CtyledContext, Color }
 export default coreConstructor
