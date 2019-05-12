@@ -17,7 +17,10 @@ import core, { CoreProps } from './classes/core'
 import active from './classes/active'
 import inline from './classes/inline'
 
-const CtyledContext = createContext({ theme: {}, pstyle: {} })
+const CtyledContext = createContext<{
+  theme: { [prop: string]: any }
+  pstyle: { [prop: string]: any }
+}>({ theme: {}, pstyle: {} })
 CtyledContext.displayName = 'CtyledContext'
 
 const ThemeProvider: SFC<{ theme: any }> = ({ theme, ...props }) => (

@@ -2,7 +2,7 @@ import { getScalar, css, round } from '../util'
 import { StyleClass } from '../types'
 import { CoreProps } from './core'
 
-interface InlineProps extends CoreProps {}
+export interface InlineProps extends CoreProps {}
 
 const inline: StyleClass<InlineProps> = {
   inline: {
