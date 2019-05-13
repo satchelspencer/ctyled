@@ -2,15 +2,13 @@ import { getScalar, css, round } from '../util'
 import { StyleClass } from '../types'
 import { CoreProps } from './core'
 
-export interface InlineProps extends CoreProps {}
-
-const inline: StyleClass<InlineProps> = {
+const inline: StyleClass<CoreProps> = {
   inline: {
     padding: ({ padd, size }) =>
       padd
         ? `
-          ${size / 4 * getScalar(padd)}px
-          ${size / 2 * getScalar(padd)}px
+          ${(size / 4) * getScalar(padd)}px
+          ${(size / 2) * getScalar(padd)}px
         `
         : undefined,
   },

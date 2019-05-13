@@ -1,4 +1,11 @@
-import React, { memo, createContext, useContext, useMemo, SFC, useCallback } from 'react'
+import React, {
+  memo,
+  createContext,
+  useContext,
+  useMemo,
+  SFC,
+  useCallback,
+} from 'react'
 import _ from 'lodash'
 import { css } from 'react-emotion'
 
@@ -33,22 +40,26 @@ const ThemeProvider: SFC<{ theme: any }> = ({ theme, ...props }) => (
   />
 )
 
+const emptyObj = {},
+  emptyArr = [],
+  emptySinterp = [[], []]
+
 const constructor: Types.Constructor = <P, T>(
   Element,
   classDef: Types.StyleClass<T>,
-  themeProps = {},
+  themeProps = emptyObj,
   inlineStyle,
   sheetStyle,
   defaultAttrs: P
 ) => {
-  inlineStyle = inlineStyle || [[], []]
-  sheetStyle = sheetStyle || [[], []]
-  const attrsProps = Object.keys(defaultAttrs || {})
+  inlineStyle = inlineStyle || emptySinterp
+  sheetStyle = sheetStyle || emptySinterp
+  const attrsProps = defaultAttrs ? Object.keys(defaultAttrs || {}) : emptyArr
 
   const CtyledComponent = memo((props: Types.CtyledComponentProps<T, P>) => {
     const context = useContext(CtyledContext),
       { theme, pstyle } = context,
-      { style, styles = {}, inRef, className, ...childProps } = props,
+      { style, styles = emptyObj, inRef, className, ...childProps } = props,
       attrProps = useMemo(
         () => _.pick(props, ...attrsProps),
         attrsProps.map(name => props[name])
@@ -132,7 +143,7 @@ const constructor: Types.Constructor = <P, T>(
         },
         (val, prop) => !inheritedProps.includes(prop) || pstyle[prop] !== val
       )
-    }, [computedThemeProps, attrProps])
+    }, [computedThemeProps, attrProps, style, pstyle])
 
     const childContextValue = useMemo(() => {
       return {
