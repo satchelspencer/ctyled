@@ -15,7 +15,9 @@ function isStop(stop: ColorOrStop): stop is ColorStop {
 export function getPositions(colorScale: ColorOrStop[]): ColorStop[] {
   let lastLow = 0,
     lowIndex = 0
-  var res: ColorStop[] = []
+
+  const res: ColorStop[] = []
+
   for (let i = 0; i < colorScale.length; i++) {
     let highIndex = colorScale.length - 1,
       nextHigh = 1
@@ -45,7 +47,8 @@ export function getPositions(colorScale: ColorOrStop[]): ColorStop[] {
 }
 
 function interpolateColor(scale: ColorStop[], value: number): string {
-  value = Math.min(Math.max(value, 0), 1)
+  value = Math.min(Math.max(value, 0), 1) //clip value
+  /* find which two colors [color, nextColor] the value is between */
   let color, i
   for (i = 0; i < scale.length; i++) {
     color = scale[i]
@@ -53,19 +56,22 @@ function interpolateColor(scale: ColorStop[], value: number): string {
   }
   const nextColor = scale[i + 1]
   if (!nextColor) return color.color
-  var dpos = nextColor.pos - color.pos
-  var vald = value - color.pos
-  var ratio = vald / dpos
+
+  const dpos = nextColor.pos - color.pos,
+    vald = value - color.pos,
+    ratio = vald / dpos
+
   return tinycolor.mix(color.color, nextColor.color, ratio * 100).toHexString()
 }
+
+type Interpolator = (v: number, secondary?: boolean) => string
 
 interface ColorPallette {
   fg: string
   bg: string
-  fg2: string
-  bg2: string
+  bq: string
+  interp: Interpolator
 }
-const colorCache: { [args: string]: ColorPallette } = {}
 
 interface Serial {
   primary?: ColorOrStop[]
@@ -74,45 +80,35 @@ interface Serial {
   contrast?: number
   inverted?: boolean
   nudgecoeff?: number
-  fgGradientContrast?: number
-  bgGradientContrast?: number
 }
 
 function getColors(
   primary: ColorOrStop[],
   secondary: ColorOrStop[],
   primaryLum: number,
-  secondaryLum: number,
-  fgGradientContrast: number,
-  bgGradientContrast: number
+  secondaryLum: number
 ): ColorPallette {
-  var x = JSON.stringify(arguments)
-  if (colorCache[x]) return colorCache[x]
+  const primaryStops = getPositions(primary),
+    secondaryStops = getPositions(secondary),
+    ffrac = (primaryLum + 1) / 2,
+    bfrac = (secondaryLum + 1) / 2,
+    diff = bfrac - ffrac,
+    bqContrast = diff * diff * diff //diff^3
 
-  const primaryStops = getPositions(primary)
-  const secondaryStops = getPositions(secondary)
-
-  var fg = interpolateColor(primaryStops, (primaryLum + 1) / 2)
-  var bg = interpolateColor(secondaryStops, (secondaryLum + 1) / 2)
-  var fg2 = fg
-  var bg2 = bg
-
-  if (fgGradientContrast) {
-    var primaryLum2 = primaryLum + fgGradientContrast * (secondaryLum - primaryLum)
-    var fgprimary = interpolateColor(primaryStops, (primaryLum2 + 1) / 2)
-    var fgsecondary = interpolateColor(secondaryStops, (primaryLum2 + 1) / 2)
-    fg2 = tinycolor.mix(fgprimary, fgsecondary, fgGradientContrast * 100).toHexString()
+  /* try and overshoot bwfrac unless it overflows pass [-.2, 1.2] */
+  let bqfrac = bfrac + bqContrast
+  /* if overshoot has too little contrast or diff > 0 (d on l) dont do overshoot */
+  if (diff > 0 || bqfrac < -0.2 || bqfrac > 1.2) {
+    bqfrac = bfrac - bqContrast
   }
 
-  if (bgGradientContrast) {
-    var secondaryLum2 = secondaryLum + bgGradientContrast * (primaryLum - secondaryLum)
-    var bgprimary = interpolateColor(primaryStops, (secondaryLum2 + 1) / 2)
-    var bgsecondary = interpolateColor(secondaryStops, (secondaryLum2 + 1) / 2)
-    bg2 = tinycolor.mix(bgsecondary, bgprimary, bgGradientContrast * 100).toHexString()
+  return {
+    fg: interpolateColor(primaryStops, ffrac),
+    bg: interpolateColor(secondaryStops, bfrac),
+    bq: interpolateColor(primaryStops, bqfrac),
+    interp: (v, secondary) =>
+      interpolateColor(secondary ? secondaryStops : primaryStops, ffrac + (1 - v) * diff),
   }
-
-  colorCache[x] = { fg, bg, fg2, bg2 }
-  return colorCache[x]
 }
 
 export default class Color {
@@ -121,14 +117,11 @@ export default class Color {
   private lum?: number
   private contrastVal?: number
   private inverted?: boolean
-  private nudgecoeff?: number
-  private fgGradientContrast?: number
-  private bgGradientContrast?: number
 
   fg: string
   bg: string
-  fg2: string
-  bg2: string
+  bq: string
+  interp: Interpolator
 
   constructor(
     primary?: ColorOrStop[],
@@ -136,67 +129,41 @@ export default class Color {
     lum?: number,
     contrast?: number,
     inverted?: boolean,
-    nudgecoeff?: number,
-    fgGradientContrast?: number,
-    bgGradientContrast?: number
   ) {
     this.primary = primary || ['black', 'white']
     this.secondary = secondary || this.primary
     this.lum = lum || 0
     this.contrastVal = contrast === undefined ? 0.5 : contrast
     this.inverted = inverted
-    this.nudgecoeff = nudgecoeff || 1
-    this.fgGradientContrast = fgGradientContrast || 0
-    this.bgGradientContrast = bgGradientContrast || 0
 
-    const invcoeff = inverted ? -1 : 1
-    // var primaryLum = Math.min(contrast + lum * invcoeff, 1) * invcoeff
-    // var secondaryLum = Math.max(-contrast + lum * invcoeff, -1) * invcoeff
-
-    const range = this.contrastVal * 2
-    const normLum = (this.lum * invcoeff + 1) / 2
-    const base = (2 - range) * normLum
-    const primaryLum = (-1 + base) * invcoeff
-    const secondaryLum = (-1 + base + range) * invcoeff
-
-    var { fg, bg, fg2, bg2 } = getColors(
-      this.primary,
-      this.secondary,
-      primaryLum,
-      secondaryLum,
-      this.fgGradientContrast,
-      this.bgGradientContrast
-    )
-
-    if (inverted) {
-      var t = fg2
-      fg2 = fg
-      fg = t
-      t = bg2
-      bg2 = bg
-      bg = t
-    }
-
+    const invcoeff = inverted ? -1 : 1,
+      range = this.contrastVal * 2,
+      normLum = (this.lum * invcoeff + 1) / 2,
+      base = (2 - range) * normLum,
+      primaryLum = (-1 + base) * invcoeff,
+      secondaryLum = (-1 + base + range) * invcoeff,
+      { fg, bq, bg, interp } = getColors(
+        this.primary,
+        this.secondary,
+        primaryLum,
+        secondaryLum
+      )
     this.fg = fg
     this.bg = bg
-    this.fg2 = fg2
-    this.bg2 = bg2
+    this.bq = bq
+    this.interp = interp
   }
   nudge = _.memoize(diff => {
     const invcoeff = 1
     const scaledDiff = diff * (1 + this.contrastVal * 3)
-    let newlum = this.lum + scaledDiff * this.nudgecoeff * invcoeff
-    if (newlum > 1 || newlum < -1)
-      newlum = this.lum - scaledDiff * this.nudgecoeff * invcoeff
+    let newlum = this.lum + scaledDiff * invcoeff
+    if (newlum > 1 || newlum < -1) newlum = this.lum - scaledDiff * invcoeff
     return new Color(
       this.primary,
       this.secondary,
       newlum,
       this.contrastVal,
       this.inverted,
-      diff >= 0 ? -this.nudgecoeff : this.nudgecoeff,
-      this.fgGradientContrast,
-      this.bgGradientContrast
     )
   })
   contrast = _.memoize(diff => {
@@ -207,9 +174,6 @@ export default class Color {
       this.lum,
       newcontrast,
       this.inverted,
-      this.nudgecoeff,
-      this.fgGradientContrast,
-      this.bgGradientContrast
     )
   })
   invert = _.memoize(() => {
@@ -219,9 +183,6 @@ export default class Color {
       this.lum,
       this.contrastVal,
       !this.inverted,
-      this.nudgecoeff,
-      this.fgGradientContrast,
-      this.bgGradientContrast
     )
   })
   as = _.memoize((newPrimary, newSecondary?) => {
@@ -231,33 +192,6 @@ export default class Color {
       this.lum,
       this.contrastVal,
       this.inverted,
-      this.nudgecoeff,
-      this.fgGradientContrast,
-      this.bgGradientContrast
-    )
-  })
-  fgGrad = _.memoize(newfgGradientContrast => {
-    return new Color(
-      this.secondary,
-      this.primary,
-      this.lum,
-      this.contrastVal,
-      this.inverted,
-      this.nudgecoeff,
-      newfgGradientContrast,
-      this.bgGradientContrast
-    )
-  })
-  grad = _.memoize(newbgGradientContrast => {
-    return new Color(
-      this.secondary,
-      this.primary,
-      this.lum,
-      this.contrastVal,
-      this.inverted,
-      this.nudgecoeff,
-      this.fgGradientContrast,
-      newbgGradientContrast
     )
   })
   toString = _.memoize(() => {
@@ -271,33 +205,12 @@ export default class Color {
         lum: this.lum,
         contrast: this.contrastVal,
         inverted: this.inverted,
-        nudgecoeff: this.nudgecoeff,
-        fgGradientContrast: this.fgGradientContrast,
-        bgGradientContrast: this.bgGradientContrast,
       }
     }
   )
   unserialize(serial: Serial) {
-    const {
-      secondary,
-      primary,
-      lum,
-      contrast,
-      inverted,
-      nudgecoeff,
-      fgGradientContrast,
-      bgGradientContrast,
-    } = serial
-    return new Color(
-      secondary,
-      primary,
-      lum,
-      contrast,
-      inverted,
-      nudgecoeff,
-      fgGradientContrast,
-      bgGradientContrast
-    )
+    const { secondary, primary, lum, contrast, inverted, nudgecoeff } = serial
+    return new Color(secondary, primary, lum, contrast, inverted, )
   }
   absLum = _.memoize(newLum => {
     return new Color(
@@ -306,9 +219,6 @@ export default class Color {
       newLum,
       this.contrastVal,
       this.inverted,
-      this.nudgecoeff,
-      this.fgGradientContrast,
-      this.bgGradientContrast
     )
   })
   absContrast = _.memoize(newContrast => {
@@ -318,9 +228,6 @@ export default class Color {
       this.lum,
       newContrast,
       this.inverted,
-      this.nudgecoeff,
-      this.fgGradientContrast,
-      this.bgGradientContrast
     )
   })
 }

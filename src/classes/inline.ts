@@ -17,7 +17,7 @@ const inline: StyleClass<CoreProps> = {
     display: inline-flex;
 
     border: ${({ border, borderColor }) => {
-      if (border) return `1px solid ${borderColor.fg}`
+      if (border) return `1px solid ${borderColor.bq}`
       else return 'none'
     }};
 

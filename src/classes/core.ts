@@ -26,6 +26,7 @@ export interface CoreProps {
   color: Color
   borderColor: Color
   bgColor: Color
+  gradient: number
   size: number
   width: any
   height: any
@@ -60,16 +61,17 @@ export interface CoreProps {
 
 const core: StyleClass<CoreProps> = {
   inline: {
-    background: ({ bg, bgColor }) => {
+    background: ({ bg, bgColor, gradient }) => {
       if (bg) {
-        if (bgColor.bg === bgColor.bg2) return bgColor.bg
-        else return `linear-gradient(${bgColor.bg}, ${bgColor.bg2})`
+        if (gradient)
+          return `linear-gradient(${bgColor.interp(0)}, ${bgColor.interp(gradient)})`
+        else return bgColor.bg
       } else return undefined
     },
     color: ({ color }) => color.fg,
     fontSize: ({ size }) => round(size) + 'px',
     padding: ({ padd, size }) =>
-      padd ? round(size / 2 * getScalar(padd)) + 'px' : undefined,
+      padd ? round((size / 2) * getScalar(padd)) + 'px' : undefined,
     flexDirection: ({ column, reverse }) =>
       ((column ? 'column' : 'row') + (reverse ? '-reverse' : '')) as any,
     alignItems: ({ align }) => align,
@@ -81,7 +83,7 @@ const core: StyleClass<CoreProps> = {
     pointerEvents: ({ disabled }) => (disabled ? 'none' : undefined),
     opacity: ({ disabled }) => (disabled ? 0.7 : undefined),
     borderRadius: ({ rounded, flatTop, flatLeft, flatRight, flatBottom, size }) => {
-      const radius = round(size / 6 * getScalar(rounded))
+      const radius = round((size / 6) * getScalar(rounded))
       return rounded
         ? `
 				${flatTop || flatLeft ? 0 : radius}px ${flatTop || flatRight ? 0 : radius}px ${
@@ -104,7 +106,7 @@ const core: StyleClass<CoreProps> = {
     background-clip: border-box;
 
     border: ${({ border, borderColor }) => {
-      if (border) return `${getScalar(border)}px solid ${borderColor.fg}`
+      if (border) return `${getScalar(border)}px solid ${borderColor.bq}`
       else return 'none'
     }};
 
@@ -128,13 +130,13 @@ const core: StyleClass<CoreProps> = {
     `} 
     ${({ lined, column, reverse, borderColor }) => lined && `
       > :not(:${reverse?'last':'first'}-child) {
-        border-${column ? 'top' : 'left'}:${getScalar(lined)}px solid ${borderColor.fg} !important;
+        border-${column ? 'top' : 'left'}:${getScalar(lined)}px solid ${borderColor.bq} !important;
       }
     `}
     
     ${({ lined, endLine, reverse, column, borderColor }) => lined && endLine && `
       > :${!reverse?'last':'first'}-child{
-        border-${column ? 'bottom' : 'right'}:${getScalar(lined)}px solid ${borderColor.fg} !important;
+        border-${column ? 'bottom' : 'right'}:${getScalar(lined)}px solid ${borderColor.bq} !important;
       }
     `}
   `,
@@ -142,9 +144,10 @@ const core: StyleClass<CoreProps> = {
     color: { default: new Color(), inherit: true },
     borderColor: {
       extends: 'color',
-      default: color => color.invert().nudge(0.3),
+      default: color => color,
     },
     bgColor: { extends: 'color', default: color => color },
+    gradient: { default: undefined },
     size: {
       default: 14,
       inherit: true,
