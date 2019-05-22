@@ -122,19 +122,21 @@ export default class Color {
   bg: string
   bq: string
   interp: Interpolator
+  wtf: number
 
   constructor(
     primary?: ColorOrStop[],
     secondary?: ColorOrStop[],
     lum?: number,
     contrast?: number,
-    inverted?: boolean,
+    inverted?: boolean
   ) {
     this.primary = primary || ['black', 'white']
     this.secondary = secondary || this.primary
     this.lum = lum || 0
     this.contrastVal = contrast === undefined ? 0.5 : contrast
     this.inverted = inverted
+    this.wtf = 666
 
     const invcoeff = inverted ? -1 : 1,
       range = this.contrastVal * 2,
@@ -163,18 +165,12 @@ export default class Color {
       this.secondary,
       newlum,
       this.contrastVal,
-      this.inverted,
+      this.inverted
     )
   })
   contrast = _.memoize(diff => {
     var newcontrast = Math.max(Math.min(this.contrastVal + diff, 1), 0)
-    return new Color(
-      this.primary,
-      this.secondary,
-      this.lum,
-      newcontrast,
-      this.inverted,
-    )
+    return new Color(this.primary, this.secondary, this.lum, newcontrast, this.inverted)
   })
   invert = _.memoize(() => {
     return new Color(
@@ -182,35 +178,27 @@ export default class Color {
       this.secondary,
       this.lum,
       this.contrastVal,
-      !this.inverted,
+      !this.inverted
     )
   })
   as = _.memoize((newPrimary, newSecondary?) => {
-    return new Color(
-      newPrimary,
-      newSecondary,
-      this.lum,
-      this.contrastVal,
-      this.inverted,
-    )
+    return new Color(newPrimary, newSecondary, this.lum, this.contrastVal, this.inverted)
   })
   toString = _.memoize(() => {
     return `${this.fg}, ${this.bg}`
   })
-  serialize = _.memoize(
-    (): Serial => {
-      return {
-        secondary: this.secondary,
-        primary: this.primary,
-        lum: this.lum,
-        contrast: this.contrastVal,
-        inverted: this.inverted,
-      }
+  serial = (): Serial => {
+    return {
+      secondary: this.secondary,
+      primary: this.primary,
+      lum: this.lum,
+      contrast: this.contrastVal,
+      inverted: this.inverted,
     }
-  )
-  unserialize(serial: Serial) {
+  }
+  unserial = (serial: Serial) => {
     const { secondary, primary, lum, contrast, inverted, nudgecoeff } = serial
-    return new Color(secondary, primary, lum, contrast, inverted, )
+    return new Color(secondary, primary, lum, contrast, inverted)
   }
   absLum = _.memoize(newLum => {
     return new Color(
@@ -218,16 +206,10 @@ export default class Color {
       this.primary,
       newLum,
       this.contrastVal,
-      this.inverted,
+      this.inverted
     )
   })
   absContrast = _.memoize(newContrast => {
-    return new Color(
-      this.secondary,
-      this.primary,
-      this.lum,
-      newContrast,
-      this.inverted,
-    )
+    return new Color(this.secondary, this.primary, this.lum, newContrast, this.inverted)
   })
 }

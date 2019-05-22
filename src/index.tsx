@@ -18,7 +18,7 @@ import {
   cssToInline,
   round,
 } from './util'
-import Color from './color'
+import Color, {getPositions} from './color'
 
 import core, { CoreProps } from './classes/core'
 import active from './classes/active'
@@ -239,5 +239,5 @@ domels.forEach(el => {
   coreConstructor[el].displayName = el
 })
 
-export { core, inline, active, ThemeProvider, round, CtyledContext, Color }
+export { core, inline, active, ThemeProvider, round, CtyledContext, Color, getPositions }
 export default coreConstructor

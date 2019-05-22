@@ -1,6 +1,6 @@
 {
   "name": "ctyled",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "contextual styles for react",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
-    "@storybook/react": "^5.0.10",
     "@types/react": "^16.8.14",
     "@types/tinycolor2": "^1.4.1",
     "babel-loader": "^8.0.5",
