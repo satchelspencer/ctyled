@@ -93,7 +93,7 @@ function getColors(
     ffrac = (primaryLum + 1) / 2,
     bfrac = (secondaryLum + 1) / 2,
     diff = bfrac - ffrac,
-    bqContrast = diff * diff * diff //diff^3
+    bqContrast = diff * diff * diff * diff * diff //diff^3
 
   /* try and overshoot bwfrac unless it overflows pass [-.2, 1.2] */
   let bqfrac = bfrac + bqContrast

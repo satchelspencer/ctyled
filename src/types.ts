@@ -86,7 +86,7 @@ export interface Constructor {
 }
 
 export type Constructeds = {
-  [TTag in keyof JSX.IntrinsicElements]?: CtyledComponent<
+  [TTag in keyof JSX.IntrinsicElements]: CtyledComponent<
     CoreProps,
     JSX.IntrinsicElements[TTag]
   >

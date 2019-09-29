@@ -1,11 +1,4 @@
-import React, {
-  memo,
-  createContext,
-  useContext,
-  useMemo,
-  SFC,
-  useCallback,
-} from 'react'
+import React, { memo, createContext, useContext, useMemo, SFC, useCallback } from 'react'
 import _ from 'lodash'
 import { css } from 'react-emotion'
 
@@ -18,7 +11,7 @@ import {
   cssToInline,
   round,
 } from './util'
-import Color, {getPositions} from './color'
+import Color, { getPositions } from './color'
 
 import core, { CoreProps } from './classes/core'
 import active from './classes/active'
@@ -231,7 +224,7 @@ const constructor: Types.Constructor = <P, T>(
   })
 }
 
-const coreConstructor: Types.ConstructorWithCore = <P extends {}>(el) => {
+const coreConstructor = <P extends {}>(el) => {
   return constructor<P, CoreProps>(el, core)
 }
 domels.forEach(el => {
@@ -240,4 +233,4 @@ domels.forEach(el => {
 })
 
 export { core, inline, active, ThemeProvider, round, CtyledContext, Color, getPositions }
-export default coreConstructor
+export default coreConstructor as Types.ConstructorWithCore

@@ -165,7 +165,7 @@ const core: StyleClass<CoreProps> = {
     reverse: { default: undefined },
     justify: { default: 'flex-start' },
     flex: { default: 'none' },
-    alignSelf: { default: '' },
+    alignSelf: { default: undefined },
     align: { default: 'stretch' },
     gutter: { default: false },
     lined: { default: undefined },
