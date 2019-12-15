@@ -1,6 +1,7 @@
 import React, { memo, createContext, useContext, useMemo, SFC, useCallback } from 'react'
 import _ from 'lodash'
 import { css } from 'react-emotion'
+import values from 'object.values'
 
 import { domels, inheritedProps } from './constants'
 import * as Types from './types'
@@ -149,7 +150,7 @@ const constructor: Types.Constructor = <P, T>(
     }, [lastChildTheme, inline, pstyle])
 
     const passThoughProps = useMemo(() => _.omit(childProps, ...attrsProps), [
-      ...Object.values(childProps),
+      ...values(childProps),
     ])
 
     const child = useMemo(() => {
