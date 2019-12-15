@@ -1,6 +1,6 @@
 {
   "name": "ctyled",
-  "version": "0.0.16",
+  "version": "0.0.19",
   "description": "contextual styles for react",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,9 +14,7 @@
     "url": "git+https://github.com/satchelspencer/ctyled.git"
   },
   "scripts": {
-    "build": "rm -rf ./dist && tsc",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook -c .storybook -o build"
+    "build": "rm -rf ./dist && tsc"
   },
   "peerDependencies": {
     "@types/react": "^16.8.14",
@@ -25,7 +23,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
-    "@storybook/react": "^5.2.8",
     "@types/react": "^16.8.14",
     "babel-loader": "^8.0.5",
     "react": "^16.12.0",
