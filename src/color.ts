@@ -1,5 +1,5 @@
 import tinycolor, { ColorInput } from 'tinycolor2'
-import _ from 'lodash'
+import memoizeOne from 'memoize-one'
 
 type ColorStop = {
   color: ColorInput
@@ -155,7 +155,7 @@ export default class Color {
     this.bq = bq
     this.interp = interp
   }
-  nudge = _.memoize(diff => {
+  nudge = memoizeOne((diff) => {
     const invcoeff = 1
     const scaledDiff = diff * (1 + this.contrastVal * 3)
     let newlum = this.lum + scaledDiff * invcoeff
@@ -168,11 +168,11 @@ export default class Color {
       this.inverted
     )
   })
-  contrast = _.memoize(diff => {
+  contrast = memoizeOne((diff) => {
     var newcontrast = Math.max(Math.min(this.contrastVal + diff, 1), 0)
     return new Color(this.primary, this.secondary, this.lum, newcontrast, this.inverted)
   })
-  invert = _.memoize(() => {
+  invert = memoizeOne(() => {
     return new Color(
       this.primary,
       this.secondary,
@@ -181,10 +181,10 @@ export default class Color {
       !this.inverted
     )
   })
-  as = _.memoize((newPrimary, newSecondary?) => {
+  as = memoizeOne((newPrimary, newSecondary?) => {
     return new Color(newPrimary, newSecondary, this.lum, this.contrastVal, this.inverted)
   })
-  toString = _.memoize(() => {
+  toString = memoizeOne(() => {
     return `${this.fg}, ${this.bg}`
   })
   serial = (): Serial => {
@@ -200,7 +200,7 @@ export default class Color {
     const { secondary, primary, lum, contrast, inverted, nudgecoeff } = serial
     return new Color(secondary, primary, lum, contrast, inverted)
   }
-  absLum = _.memoize(newLum => {
+  absLum = memoizeOne((newLum) => {
     return new Color(
       this.secondary,
       this.primary,
@@ -209,7 +209,7 @@ export default class Color {
       this.inverted
     )
   })
-  absContrast = _.memoize(newContrast => {
+  absContrast = memoizeOne((newContrast) => {
     return new Color(this.secondary, this.primary, this.lum, newContrast, this.inverted)
   })
 }
