@@ -29,7 +29,7 @@ export interface StyleClass<P extends Partial<CoreProps>> {
 }
 
 export type ThemeArgs<T, P> = {
-  [TP in keyof T]?: T[TP] | ((prev: T[TP], props?: P) => T[TP])
+  [TP in keyof T]?: T[TP] | ((prev: T[TP], props: P) => T[TP])
 }
 
 export interface CtyledProps<T, P> {
@@ -42,6 +42,7 @@ export interface CtyledProps<T, P> {
 interface CtyledAPI<T, P> {
   styles(newThemeStyles: ThemeArgs<T, P>): CtyledComponent<T, P>
   extend(strings: TemplateStringsArray, ...interps: interp<T>[]): CtyledComponent<T, P>
+  extendInline(strings: TemplateStringsArray, ...interps: interp<T>[]): CtyledComponent<T, P>
   extendSheet(
     strings: TemplateStringsArray,
     ...interps: interp<T>[]

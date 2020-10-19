@@ -156,8 +156,8 @@ export default class Color {
     this.interp = interp
   }
   nudge = memoizeOne((diff) => {
-    const invcoeff = 1
-    const scaledDiff = diff * (1 + this.contrastVal * 3)
+    const invcoeff = this.inverted ? -1 : 1,
+      scaledDiff = diff * (1 + this.contrastVal * 3)
     let newlum = this.lum + scaledDiff * invcoeff
     if (newlum > 1 || newlum < -1) newlum = this.lum - scaledDiff * invcoeff
     return new Color(
@@ -187,15 +187,17 @@ export default class Color {
   toString = memoizeOne(() => {
     return `${this.fg}, ${this.bg}`
   })
-  serial = (): Serial => {
-    return {
-      secondary: this.secondary,
-      primary: this.primary,
-      lum: this.lum,
-      contrast: this.contrastVal,
-      inverted: this.inverted,
+  serial = memoizeOne(
+    (): Serial => {
+      return {
+        secondary: this.secondary,
+        primary: this.primary,
+        lum: this.lum,
+        contrast: this.contrastVal,
+        inverted: this.inverted,
+      }
     }
-  }
+  )
   unserial = (serial: Serial) => {
     const { secondary, primary, lum, contrast, inverted, nudgecoeff } = serial
     return new Color(secondary, primary, lum, contrast, inverted)

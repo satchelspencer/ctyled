@@ -56,7 +56,7 @@ const constructor: Types.Constructor = <P, T>(
       { style, styles = emptyObj, inRef, className, ...childProps } = props,
       attrProps = useMemo(
         () => _.pick(props, ...attrsProps),
-        attrsProps.map(name => props[name])
+        attrsProps.map((name) => props[name])
       )
 
     const getValue = useCallback(
@@ -107,7 +107,7 @@ const constructor: Types.Constructor = <P, T>(
     /* stylesheet computation */
     const stylesClassName = useMemo(() => {
       const [sheetCss, sheetInterpolations] = joinTemplates(classDef.styles, sheetStyle),
-        sheetInterpValues = sheetInterpolations.map(interp => {
+        sheetInterpValues = sheetInterpolations.map((interp) => {
           if (typeof interp === 'function')
             return interp(computedThemeProps as T, attrProps)
           else return interp
@@ -118,12 +118,12 @@ const constructor: Types.Constructor = <P, T>(
 
     /* inline style computation */
     const inline = useMemo(() => {
-      const classInlineStyles = _.mapValues(classDef.inline, value => {
+      const classInlineStyles = _.mapValues(classDef.inline, (value) => {
           if (_.isFunction(value)) return value(computedThemeProps as T)
           else return value
         }),
         [inlineCss, interpolations] = inlineStyle,
-        interpValues = interpolations.map(interp => {
+        interpValues = interpolations.map((interp) => {
           if (_.isFunction(interp)) return interp(computedThemeProps, attrProps)
           else return interp
         }),
@@ -172,7 +172,7 @@ const constructor: Types.Constructor = <P, T>(
   })
 
   return Object.assign(CtyledComponent, {
-    styles: newThemeProps =>
+    styles: (newThemeProps) =>
       constructor<P, T>(
         Element,
         classDef,
@@ -183,6 +183,16 @@ const constructor: Types.Constructor = <P, T>(
       ),
 
     extend: (strings: TemplateStringsArray, ...interps: Types.interp<T>[]) =>
+      constructor<P, T>(
+        Element,
+        classDef,
+        themeProps,
+        joinTemplates(inlineStyle, [[...strings], interps]),
+        sheetStyle,
+        defaultAttrs
+      ),
+
+    extendInline: (strings: TemplateStringsArray, ...interps: Types.interp<T>[]) =>
       constructor<P, T>(
         Element,
         classDef,
@@ -228,7 +238,7 @@ const constructor: Types.Constructor = <P, T>(
 const coreConstructor = <P extends {}>(el) => {
   return constructor<P, CoreProps>(el, core)
 }
-domels.forEach(el => {
+domels.forEach((el) => {
   coreConstructor[el] = coreConstructor(el)
   coreConstructor[el].displayName = el
 })

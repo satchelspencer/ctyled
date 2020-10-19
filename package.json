@@ -1,6 +1,6 @@
 {
   "name": "ctyled",
-  "version": "0.0.19",
+  "version": "0.0.23",
   "description": "contextual styles for react",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
